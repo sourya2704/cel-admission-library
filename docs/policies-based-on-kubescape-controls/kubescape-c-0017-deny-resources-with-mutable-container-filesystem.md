@@ -25,7 +25,7 @@ By default, containers are permitted mostly unrestricted execution within their 
 Neither `--profile=general` nor `--profile=restricted` sets `readOnlyRootFilesystem`, so `kubectl debug` is denied by this policy unless you add it with `--custom`. The restricted profile also sets `runAsNonRoot: true`, so if the debug image runs as root by default (busybox does), set a non-root `runAsUser` too, otherwise the kubelet will not start the container. For example, save this as `custom.json`:
 
 ```json
-{"securityContext":{"readOnlyRootFilesystem":true,"runAsUser":65534}}
+{"securityContext":{"readOnlyRootFilesystem":true,"runAsUser":65534,"runAsGroup":65534}}
 ```
 
 and run:

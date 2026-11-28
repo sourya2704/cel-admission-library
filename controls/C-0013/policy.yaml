@@ -98,3 +98,15 @@ spec:
           )
         )
       messageExpression: object.kind + "/" + object.metadata.name + " contains container/s which have the capability to run as root! (see more at https://kubescape.io/docs/controls/c-0013/)"
+    # Each container's effective runAsGroup (its own, or the pod-level one when the
+    # container doesn't set it) must be set and greater than 0, as in the Rego version of
+    # this control. Windows pods can't set runAsGroup (the API server rejects it), so the
+    # group check is skipped for them.
+    - expression: >
+        variables.podSpec.?os.?name.orValue('') == 'windows' ||
+        variables.containers.all(container,
+          container.?securityContext.?runAsGroup.orValue(
+            variables.podSecurityContext.?runAsGroup.orValue(0)
+          ) > 0
+        )
+      messageExpression: object.kind + "/" + object.metadata.name + " contains container/s whose runAsGroup is not set or is 0, so they can run with the root group! (see more at https://kubescape.io/docs/controls/c-0013/)"
