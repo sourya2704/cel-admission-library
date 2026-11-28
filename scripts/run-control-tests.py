@@ -220,7 +220,9 @@ try:
         try:
             subprocess.check_call(['kubectl', 'delete', '-f', 'policy.yaml'],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             subprocess.check_call(['kubectl', 'delete', '-f', policy_bind_temp_file_name],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if connect and not object_existed:
+            # connect and resize tests create a real Pod in the test namespace, which
+            # the next test of the same name would otherwise update instead of create.
+            if (connect or resize) and not object_existed:
                 subprocess.check_call(['kubectl', 'delete'] + namespace_args + ['-f', test_object_yaml],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             subprocess.check_call(['kubectl', 'delete', '-f', param_file_name],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except:
@@ -247,6 +249,9 @@ try:
 except Exception as e:
     print(colored('Exception: ' + str(e),'red'))
     all_tests_passed = False
+    # The test that raised skipped its cleanup. Delete its policy, otherwise it stays
+    # bound and denies the tests of every control that runs after this one.
+    subprocess.call(['kubectl', 'delete', '--ignore-not-found', '-f', 'policy.yaml'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 
